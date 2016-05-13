@@ -5,14 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
-	"github.com/tealeg/xlsx"
+	"github.com/zxfonline/xlsx"
 )
 
 var xlsxPath = flag.String("f", "", "Path to an XLSX file")
 var sheetIndex = flag.Int("i", 0, "Index of sheet to convert, zero based")
 var delimiter = flag.String("d", ";", "Delimiter to use between fields")
+var csvPath = flag.String("o", "", "Path to the CSV output file")
 
 type outputer func(s string)
 
@@ -37,7 +39,9 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 				if err != nil {
 					vals = append(vals, err.Error())
 				}
-				vals = append(vals, fmt.Sprintf("%q", str))
+				//TODO cell中的换行 引号处理
+				//				vals = append(vals, fmt.Sprintf("%q", str))
+				vals = append(vals, str)
 			}
 			outputf(strings.Join(vals, *delimiter) + "\n")
 		}
@@ -45,15 +49,43 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 	return nil
 }
 
+//构建一个每日写日志文件的写入器
+func openFile(filepath string) (wc *os.File, err error) {
+	dir, fn := path.Split(filepath)
+	if _, err = os.Stat(dir); err != nil && !os.IsExist(err) {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+			return nil, err
+		}
+		if _, err = os.Stat(dir); err != nil {
+			return nil, err
+		}
+	}
+	return os.OpenFile(dir+fn, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+}
+
 func main() {
 	flag.Parse()
-	if len(os.Args) < 3 {
+	if len(os.Args) < 4 {
 		flag.PrintDefaults()
 		return
 	}
 	flag.Parse()
-	printer := func(s string) { fmt.Printf("%s", s) }
+	wc, err := openFile(*csvPath)
+	if err != nil {
+		panic(err)
+	}
+	defer wc.Close()
+	printer := func(s string) {
+		//		fmt.Printf("%s", s)
+		if _, err := wc.WriteString(s); err != nil {
+			panic(err)
+		}
+
+	}
 	if err := generateCSVFromXLSXFile(*xlsxPath, *sheetIndex, printer); err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
