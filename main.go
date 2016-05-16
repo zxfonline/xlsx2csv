@@ -42,13 +42,14 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 				}
 				if strings.ContainsAny(str, `"`) {
 					str = strings.Replace(str, `"`, `""`, -1)
-					vals = append(vals, fmt.Sprintf("\"%s\"", str))
-				} else if strings.ContainsAny(str, "\n") {
-					vals = append(vals, fmt.Sprintf("\"%s\"", str))
-				} else {
-					vals = append(vals, str)
+					//					vals = append(vals, fmt.Sprintf("\"%s\"", str))
+					//				} else if strings.ContainsAny(str, "\n") {
+					//					vals = append(vals, fmt.Sprintf("\"%s\"", str))
+					//				} else {
+					//					vals = append(vals, str)
+					//					vals = append(vals, fmt.Sprintf("\"%s\"", str))
 				}
-
+				vals = append(vals, fmt.Sprintf("\"%s\"", str))
 			}
 			outputf(strings.Join(vals, *delimiter) + "\n")
 		}
