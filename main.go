@@ -37,11 +37,18 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 			for _, cell := range row.Cells {
 				str, err := cell.String()
 				if err != nil {
-					vals = append(vals, err.Error())
+					//					vals = append(vals, err.Error())
+					return err
 				}
-				//TODO cell中的换行 引号处理
-				//				vals = append(vals, fmt.Sprintf("%q", str))
-				vals = append(vals, str)
+				if strings.ContainsAny(str, `"`) {
+					str = strings.Replace(str, `"`, `""`, -1)
+					vals = append(vals, fmt.Sprintf("\"%s\"", str))
+				} else if strings.ContainsAny(str, "\n") {
+					vals = append(vals, fmt.Sprintf("\"%s\"", str))
+				} else {
+					vals = append(vals, str)
+				}
+
 			}
 			outputf(strings.Join(vals, *delimiter) + "\n")
 		}
