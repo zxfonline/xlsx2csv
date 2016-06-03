@@ -6,19 +6,23 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/zxfonline/fileutil"
 
 	"github.com/zxfonline/xlsx"
 )
 
 var xlsxPath = flag.String("f", "", "Path to an XLSX file")
 var sheetIndex = flag.Int("i", 0, "Index of sheet to convert, zero based")
-var delimiter = flag.String("d", ";", "Delimiter to use between fields")
+var delimiter = flag.String("d", ",", "Delimiter to use between fields")
 var csvPath = flag.String("o", "", "Path to the CSV output file")
 
 type outputer func(s string)
 
 func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outputer) error {
+	excelFileName = filepath.ToSlash(excelFileName)
 	xlFile, error := xlsx.OpenFile(excelFileName)
 	if error != nil {
 		return error
@@ -58,8 +62,8 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 }
 
 //构建一个每日写日志文件的写入器
-func openFile(filepath string) (wc *os.File, err error) {
-	dir, fn := path.Split(filepath)
+func openFile(pathfile string) (wc *os.File, err error) {
+	dir, _ := path.Split(pathfile)
 	if _, err = os.Stat(dir); err != nil && !os.IsExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
@@ -71,16 +75,21 @@ func openFile(filepath string) (wc *os.File, err error) {
 			return nil, err
 		}
 	}
-	return os.OpenFile(dir+fn, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	return os.OpenFile(pathfile, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
 }
 
 func main() {
 	flag.Parse()
-	if len(os.Args) < 4 {
-		flag.PrintDefaults()
-		return
+	if *xlsxPath == "" {
+		if len(os.Args) < 4 {
+			flag.PrintDefaults()
+			return
+		}
+		flag.Parse()
 	}
-	flag.Parse()
+	if *csvPath == "" {
+		*csvPath = fileutil.ChangeFileExt(*xlsxPath, ".csv")
+	}
 	wc, err := openFile(*csvPath)
 	if err != nil {
 		panic(err)

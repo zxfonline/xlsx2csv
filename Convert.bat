@@ -1,2 +1,4 @@
-xlsx2csv.exe -f "./testfile.xlsx" -i "0" -o "./testfile.csv" -d ","
+for /R %%I in (*.xlsx) do (
+    xlsx2csv.exe -f %%I
+)
 pause
