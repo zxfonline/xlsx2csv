@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/zxfonline/fileutil"
 
-	"github.com/zxfonline/xlsx"
+	"github.com/tealeg/xlsx"
 )
 
 var xlsxPath = flag.String("f", "", "Path to an XLSX file")
@@ -22,7 +21,7 @@ var csvPath = flag.String("o", "", "Path to the CSV output file")
 type outputer func(s string)
 
 func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outputer) error {
-	excelFileName = filepath.ToSlash(excelFileName)
+	excelFileName = strings.Replace(excelFileName, "\\", "/", -1)
 	xlFile, error := xlsx.OpenFile(excelFileName)
 	if error != nil {
 		return error
