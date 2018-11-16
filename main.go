@@ -9,7 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/zxfonline/fileutil"
@@ -66,7 +66,7 @@ func generateCSVFromXLSXFile(excelFileName string, sheetIndex int, outputf outpu
 
 //构建一个每日写日志文件的写入器
 func openFile(pathfile string) (wc *os.File, err error) {
-	dir, _ := path.Split(pathfile)
+	dir, _ := filepath.Split(pathfile)
 	if _, err = os.Stat(dir); err != nil && !os.IsExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
